@@ -1,254 +1,424 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import HeroSection from '@/components/HeroSection';
-import AnimeCarousel from '@/components/AnimeCarousel';
-import Top10Section from '@/components/Top10Section';
-import { AnimeAPI, type HomePageData } from '@/lib/api';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { AnimeAPI } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
-const HomePage = () => {
-  const [homeData, setHomeData] = useState<HomePageData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface ApiAnime {
+  id?: string;
+  animeId?: string;
+  anilistId?: string;
+  malId?: string;
+  title?: string;
+  name?: string;
+  poster?: string;
+  image?: string;
+  img?: string;
+  type?: string;
+  status?: string;
+  totalEpisodes?: number;
+  episodes?: { sub?: number } | number;
+  subOrDub?: string;
+}
 
-  useEffect(() => {
-    const fetchHomeData = async () => {
-      try {
-        setLoading(true);
-        const data = await AnimeAPI.getHomePage();
+interface SearchResult {
+  id: string;
+  title: string;
+  poster: string;
+  type: string;
+  status: string;
+  totalEpisodes: number;
+  subOrDub: string;
+}
+
+const KEYBOARD_LAYOUT = [
+  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+  ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+  ['SPACE', 'BACKSPACE', 'SEARCH', 'CLEAR']
+];
+
+const TVSearchPage = () => {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [focusedSection, setFocusedSection] = useState<'keyboard' | 'results'>('keyboard');
+  const [focusedKey, setFocusedKey] = useState({ row: 0, col: 0 });
+  const [focusedResult, setFocusedResult] = useState(0);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Perform search
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('🔍 Searching for:', query);
+      const response = await AnimeAPI.searchAnime(query);
+      console.log('📡 Full API response:', response);
+      
+      if (response.success && response.data) {
+        // Check different possible data structures
+        let animes: ApiAnime[] = [];
         
-        if (data.success) {
-          setHomeData(data);
-        } else {
-          setError('Failed to load anime data');
+        if (response.data.animes) {
+          animes = response.data.animes;
+        } else if (Array.isArray(response.data)) {
+          animes = response.data;
+        } else if (response.data && 'results' in response.data) {
+          animes = (response.data as { results: ApiAnime[] }).results;
         }
-      } catch (err) {
-        console.error('Error fetching home data:', err);
-        setError('Unable to connect to anime service');
-      } finally {
-        setLoading(false);
+        
+        console.log('📺 Found animes:', animes.length, animes);
+        
+        if (animes.length === 0) {
+          setSearchResults([]);
+          setFocusedSection('keyboard');
+          return;
+        }
+        
+        // Convert to the expected format
+        const convertedResults: SearchResult[] = animes.map((anime: ApiAnime) => ({
+          id: anime.id || anime.animeId || anime.anilistId || anime.malId || 'unknown',
+          title: anime.title || anime.name || 'Unknown Title',
+          poster: anime.poster || anime.image || anime.img || '/placeholder-anime.jpg',
+          type: anime.type || 'TV',
+          status: anime.status || 'Unknown',
+          totalEpisodes: anime.totalEpisodes || 
+            (typeof anime.episodes === 'object' ? anime.episodes?.sub || 0 : anime.episodes || 0),
+          subOrDub: anime.subOrDub || 'Sub'
+        }));
+        
+        console.log('✅ Converted results:', convertedResults);
+        setSearchResults(convertedResults);
+        setFocusedSection('results');
+        setFocusedResult(0);
+      } else {
+        console.error('❌ Search failed or no success flag:', response);
+        setSearchResults([]);
+        setFocusedSection('keyboard');
+      }
+    } catch (error) {
+      console.error('💥 Search error:', error);
+      setSearchResults([]);
+      setFocusedSection('keyboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle virtual keyboard input
+  const handleKeyboardInput = useCallback((key: string) => {
+    let newQuery = searchQuery;
+
+    switch (key) {
+      case 'SPACE':
+        newQuery = searchQuery + ' ';
+        break;
+      case 'BACKSPACE':
+        newQuery = searchQuery.slice(0, -1);
+        break;
+      case 'SEARCH':
+        performSearch(searchQuery);
+        return;
+      case 'CLEAR':
+        newQuery = '';
+        setSearchResults([]);
+        break;
+      default:
+        newQuery = searchQuery + key.toLowerCase();
+        break;
+    }
+
+    setSearchQuery(newQuery);
+  }, [searchQuery]);
+
+  // Navigate anime detail
+  const navigateToAnime = useCallback((animeId: string) => {
+    router.push(`/tv/anime/${animeId}`);
+  }, [router]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
+
+      if (focusedSection === 'keyboard') {
+        const maxRow = KEYBOARD_LAYOUT.length - 1;
+        const maxCol = KEYBOARD_LAYOUT[focusedKey.row].length - 1;
+
+        switch (e.key) {
+          case 'ArrowUp':
+            if (focusedKey.row > 0) {
+              const newRow = focusedKey.row - 1;
+              const newCol = Math.min(focusedKey.col, KEYBOARD_LAYOUT[newRow].length - 1);
+              setFocusedKey({ row: newRow, col: newCol });
+            }
+            break;
+          case 'ArrowDown':
+            if (focusedKey.row < maxRow) {
+              const newRow = focusedKey.row + 1;
+              const newCol = Math.min(focusedKey.col, KEYBOARD_LAYOUT[newRow].length - 1);
+              setFocusedKey({ row: newRow, col: newCol });
+            } else if (searchResults.length > 0) {
+              setFocusedSection('results');
+              setFocusedResult(0);
+            }
+            break;
+          case 'ArrowLeft':
+            if (focusedKey.col > 0) {
+              setFocusedKey(prev => ({ ...prev, col: prev.col - 1 }));
+            }
+            break;
+          case 'ArrowRight':
+            if (focusedKey.col < maxCol) {
+              setFocusedKey(prev => ({ ...prev, col: prev.col + 1 }));
+            }
+            break;
+          case 'Enter':
+            const selectedKey = KEYBOARD_LAYOUT[focusedKey.row][focusedKey.col];
+            handleKeyboardInput(selectedKey);
+            break;
+          case 'Escape':
+          case 'Backspace':
+            router.back();
+            break;
+        }
+      } else if (focusedSection === 'results') {
+        switch (e.key) {
+          case 'ArrowUp':
+            if (focusedResult > 0) {
+              setFocusedResult(focusedResult - 1);
+            } else {
+              setFocusedSection('keyboard');
+            }
+            break;
+          case 'ArrowDown':
+            if (focusedResult < searchResults.length - 1) {
+              setFocusedResult(focusedResult + 1);
+            }
+            break;
+          case 'ArrowLeft':
+            if (focusedResult >= 4) {
+              setFocusedResult(focusedResult - 4);
+            }
+            break;
+          case 'ArrowRight':
+            if (focusedResult + 4 < searchResults.length) {
+              setFocusedResult(focusedResult + 4);
+            }
+            break;
+          case 'Enter':
+            if (searchResults[focusedResult]) {
+              navigateToAnime(searchResults[focusedResult].id);
+            }
+            break;
+          case 'Escape':
+          case 'Backspace':
+            setFocusedSection('keyboard');
+            break;
+        }
       }
     };
 
-    fetchHomeData();
-  }, []);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedSection, focusedKey, focusedResult, searchResults, router, searchQuery]);
 
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
+  // Scroll focused result into view
+  useEffect(() => {
+    if (focusedSection === 'results' && resultsRef.current[focusedResult]) {
+      resultsRef.current[focusedResult]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, [focusedSection, focusedResult]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        {/* Hero Skeleton */}
-        <div className="h-screen relative">
-          <Skeleton className="absolute inset-0" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
-          <div className="relative z-10 h-full flex items-center max-w-7xl mx-auto px-4">
-            <div className="max-w-2xl space-y-4">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-20 w-full" />
-              <div className="flex space-x-4">
-                <Skeleton className="h-12 w-32" />
-                <Skeleton className="h-12 w-32" />
+  return (
+    <div className="min-h-screen bg-black text-white p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-4">🔍 Search Anime</h1>
+        <div className="text-xl text-gray-300">
+          Use the virtual keyboard to search for anime
+        </div>
+      </div>
+
+      {/* Search Input Display */}
+      <div className="mb-8">
+        <div className="bg-gray-800 rounded-lg p-4 border-2 border-gray-600">
+          <div className="flex items-center space-x-4">
+            <span className="text-2xl">🔍</span>
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent text-2xl text-white placeholder-gray-400 outline-none"
+              placeholder="Type to search..."
+              readOnly
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                }}
+                className="text-xl p-2"
+              >
+                ❌
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-8">
+        {/* Virtual Keyboard */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold mb-4">Virtual Keyboard</h2>
+          <div className="space-y-3">
+            {KEYBOARD_LAYOUT.map((row, rowIndex) => (
+              <div key={rowIndex} className="flex gap-2 justify-center">
+                {row.map((key, colIndex) => (
+                  <Button
+                    key={`${rowIndex}-${colIndex}`}
+                    variant={
+                      focusedSection === 'keyboard' && 
+                      focusedKey.row === rowIndex && 
+                      focusedKey.col === colIndex 
+                        ? "default" 
+                        : "outline"
+                    }
+                    onClick={() => handleKeyboardInput(key)}
+                    className={`
+                      min-w-[60px] h-14 text-lg font-bold transition-all
+                      ${focusedSection === 'keyboard' && 
+                        focusedKey.row === rowIndex && 
+                        focusedKey.col === colIndex 
+                        ? 'ring-4 ring-rose-500 bg-rose-500 scale-110' 
+                        : 'hover:bg-gray-700'}
+                      ${key === 'SPACE' ? 'min-w-[200px]' : ''}
+                      ${['BACKSPACE', 'SEARCH', 'CLEAR'].includes(key) ? 'min-w-[100px]' : ''}
+                    `}
+                  >
+                    {key === 'SPACE' ? '⎵ SPACE' : 
+                     key === 'BACKSPACE' ? '⌫' :
+                     key === 'SEARCH' ? '🔍 SEARCH' :
+                     key === 'CLEAR' ? '🗑️ CLEAR' : key}
+                  </Button>
+                ))}
               </div>
+            ))}
+          </div>
+
+          {/* Instructions */}
+          <div className="mt-6 p-4 bg-gray-800 rounded-lg">
+            <h3 className="font-bold mb-2">🎮 TV Remote Controls:</h3>
+            <div className="text-sm space-y-1 text-gray-300">
+              <div>• Arrow Keys: Navigate keyboard/results</div>
+              <div>• Enter: Select key or anime</div>
+              <div>• Escape: Go back</div>
+              <div>• Down from keyboard: Go to results</div>
             </div>
           </div>
         </div>
 
-        {/* Content Skeletons */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="space-y-6">
-              <Skeleton className="h-8 w-64" />
-              <div className="flex space-x-4 overflow-x-auto">
-                {[...Array(6)].map((_, j) => (
-                  <div key={j} className="flex-shrink-0 w-48">
-                    <Skeleton className="h-64 w-full mb-3" />
-                    <Skeleton className="h-4 w-full mb-2" />
-                    <Skeleton className="h-3 w-3/4" />
+        {/* Search Results */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">
+              Search Results {searchResults.length > 0 && `(${searchResults.length})`}
+            </h2>
+            {loading && (
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
+            )}
+          </div>
+
+          {searchResults.length > 0 ? (
+            <div className="grid grid-cols-4 gap-4 max-h-[600px] overflow-y-auto">
+              {searchResults.map((anime, index) => (
+                <div
+                  key={anime.id}
+                  ref={(el) => { resultsRef.current[index] = el; }}
+                  onClick={() => navigateToAnime(anime.id)}
+                  className={`
+                    bg-gray-800 rounded-lg overflow-hidden cursor-pointer transition-all duration-200
+                    ${focusedSection === 'results' && focusedResult === index
+                      ? 'ring-4 ring-rose-500 scale-105 z-10' 
+                      : 'hover:bg-gray-700'}
+                  `}
+                >
+                  <div className="aspect-[3/4] relative">
+                    <Image
+                      src={anime.poster}
+                      alt={anime.title}
+                      fill
+                      className="object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder-anime.jpg';
+                      }}
+                    />
                   </div>
-                ))}
+                  <div className="p-3">
+                    <h3 className="font-bold text-sm mb-2 line-clamp-2">
+                      {anime.title}
+                    </h3>
+                    <div className="space-y-1">
+                      <Badge variant="outline" className="text-xs">
+                        {anime.type}
+                      </Badge>
+                      {anime.totalEpisodes && (
+                        <div className="text-xs text-gray-400">
+                          {anime.totalEpisodes} episodes
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : searchQuery ? (
+            <div className="text-center py-12 text-gray-400">
+              {loading ? (
+                <div className="space-y-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500 mx-auto"></div>
+                  <div>Searching for &quot;{searchQuery}&quot;...</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-6xl">😢</div>
+                  <div>No results found for &quot;{searchQuery}&quot;</div>
+                  <div className="text-sm">Try different keywords</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              <div className="space-y-4">
+                <div className="text-6xl">🔍</div>
+                <div>Enter a search term to find anime</div>
+                <div className="text-sm">Use the virtual keyboard to type</div>
               </div>
             </div>
-          ))}
+          )}
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Alert className="max-w-md">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error}. Please try refreshing the page.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (!homeData?.data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">No data available</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      {homeData.data.spotlightAnimes && homeData.data.spotlightAnimes.length > 0 && (
-        <HeroSection spotlightAnimes={homeData.data.spotlightAnimes} />
-      )}
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Latest Episodes */}
-        {homeData.data.latestEpisodeAnimes && homeData.data.latestEpisodeAnimes.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ delay: 0.2 }}
-          >
-            <AnimeCarousel
-              title="Latest Episodes"
-              animes={homeData.data.latestEpisodeAnimes}
-              size="md"
-              viewAllLink="/category/recently-updated"
-            />
-          </motion.div>
-        )}
-
-        {/* Top 10 Section */}
-        {homeData.data.top10Animes && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ delay: 0.4 }}
-          >
-            <Top10Section top10Animes={homeData.data.top10Animes} />
-          </motion.div>
-        )}
-
-        {/* Trending Anime */}
-        {homeData.data.trendingAnimes && homeData.data.trendingAnimes.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ delay: 0.6 }}
-          >
-            <AnimeCarousel
-              title="Trending Now"
-              animes={homeData.data.trendingAnimes}
-              showRank={true}
-              size="md"
-              viewAllLink="/trending"
-            />
-          </motion.div>
-        )}
-
-        {/* Most Popular */}
-        {homeData.data.mostPopularAnimes && homeData.data.mostPopularAnimes.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ delay: 0.8 }}
-          >
-            <AnimeCarousel
-              title="Most Popular"
-              animes={homeData.data.mostPopularAnimes}
-              size="md"
-              viewAllLink="/category/most-popular"
-            />
-          </motion.div>
-        )}
-
-        {/* Top Airing */}
-        {homeData.data.topAiringAnimes && homeData.data.topAiringAnimes.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ delay: 1.0 }}
-          >
-            <AnimeCarousel
-              title="Currently Airing"
-              animes={homeData.data.topAiringAnimes}
-              size="md"
-              viewAllLink="/category/top-airing"
-            />
-          </motion.div>
-        )}
-
-        {/* Most Favorite */}
-        {homeData.data.mostFavoriteAnimes && homeData.data.mostFavoriteAnimes.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ delay: 1.2 }}
-          >
-            <AnimeCarousel
-              title="Top Rated"
-              animes={homeData.data.mostFavoriteAnimes}
-              size="md"
-              viewAllLink="/category/most-favorite"
-            />
-          </motion.div>
-        )}
-
-        {/* Recently Completed */}
-        {homeData.data.latestCompletedAnimes && homeData.data.latestCompletedAnimes.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ delay: 1.4 }}
-          >
-            <AnimeCarousel
-              title="Recently Completed"
-              animes={homeData.data.latestCompletedAnimes}
-              size="md"
-              viewAllLink="/category/completed"
-            />
-          </motion.div>
-        )}
-
-        {/* Top Upcoming */}
-        {homeData.data.topUpcomingAnimes && homeData.data.topUpcomingAnimes.length > 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ delay: 1.6 }}
-            className="pb-12"
-          >
-            <AnimeCarousel
-              title="Upcoming Anime"
-              animes={homeData.data.topUpcomingAnimes}
-              size="md"
-              viewAllLink="/category/top-upcoming"
-            />
-          </motion.div>
-        )}
       </div>
     </div>
   );
 };
 
-export default HomePage;
+export default TVSearchPage;

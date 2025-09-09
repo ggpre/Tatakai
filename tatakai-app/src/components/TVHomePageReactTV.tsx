@@ -19,6 +19,12 @@ interface ApiAnime {
   image?: string;
   poster?: string;
   img?: string;
+  type?: string;
+  status?: string;
+  totalEpisodes?: number;
+  releasedDate?: string;
+  otherName?: string;
+  subOrDub?: string;
   description?: string;
   synopsis?: string;
 }
@@ -27,7 +33,7 @@ interface Anime {
   id: string;
   title: string;
   image: string;
-  description?: string;
+  description: string;
 }
 
 const AnimeCard: React.FC<{ anime: Anime; id: string; groupId: string }> = ({ anime, id, groupId }) => {
@@ -77,52 +83,43 @@ const SpotlightSection: React.FC<{ anime: Anime }> = ({ anime }) => {
   };
 
   return (
-    <div className="relative h-96 mb-8 rounded-lg overflow-hidden">
+    <div className="relative h-[85vh] mb-16 rounded-lg overflow-hidden tv-spotlight-section" data-section="spotlight">
       <img
         src={anime.image || '/placeholder-anime.jpg'}
         alt={anime.title}
         className="w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent">
-        <div className="flex flex-col justify-center h-full p-8 max-w-2xl">
-          <h1 className="text-4xl font-bold text-white mb-4">{anime.title}</h1>
+      <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-transparent">
+        <div className="flex flex-col justify-center h-full p-16 max-w-5xl">
+          <h1 className="text-7xl font-bold text-white mb-8 drop-shadow-lg leading-tight">{anime.title}</h1>
           {anime.description && (
-            <p className="text-lg text-gray-200 mb-6 line-clamp-3">
+            <p className="text-2xl text-gray-200 mb-10 line-clamp-4 drop-shadow leading-relaxed max-w-4xl">
               {anime.description}
             </p>
           )}
-          <div className="flex gap-4">
+          <HorizontalList id="spotlight-buttons" spacing={20}>
             <Focusable
               id="spotlight-watch"
-              groupId="spotlight"
+              groupId="spotlight-buttons"
               onSelect={handleWatch}
               className="tv-button primary"
             >
-              <button className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
-                ▶️ Watch Now
+              <button className="bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-lg font-bold transition-colors flex items-center gap-3 text-lg">
+                <span className="text-2xl">▶️</span> Watch Now
               </button>
             </Focusable>
             <Focusable
               id="spotlight-details"
-              groupId="spotlight"
+              groupId="spotlight-buttons"
               onSelect={handleSelect}
               className="tv-button secondary"
             >
-              <button className="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+              <button className="bg-white/20 hover:bg-white/30 text-white px-10 py-4 rounded-lg font-bold transition-colors backdrop-blur-sm text-lg">
                 ℹ️ More Info
               </button>
             </Focusable>
-            <Focusable
-              id="spotlight-search"
-              groupId="spotlight"
-              onSelect={handleSearch}
-              className="tv-button secondary"
-            >
-              <button className="bg-blue-600/80 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
-                🔍 Search
-              </button>
-            </Focusable>
-          </div>
+          
+          </HorizontalList>
         </div>
       </div>
     </div>
@@ -135,9 +132,9 @@ const AnimeSection: React.FC<{
   sectionId: string;
 }> = ({ title, anime, sectionId }) => {
   return (
-    <div className="mb-8">
-      <h2 className="text-2xl font-bold text-white mb-4 px-4">{title}</h2>
-      <HorizontalList id={sectionId} className="px-4" spacing={16} wrapAround>
+    <div className="mb-12 py-6" data-section={sectionId}>
+      <h2 className="text-3xl font-bold text-white mb-8 px-8">{title}</h2>
+      <HorizontalList id={sectionId} className="px-8" spacing={20} wrapAround>
         {anime.map((item, index) => (
           <AnimeCard
             key={item.id}
@@ -222,30 +219,40 @@ const TVHomePage: React.FC = () => {
     );
   }
 
-  const trendingAnime = convertAnimeData(homeData.data?.trendingAnimes || []);
-  const popularAnime = convertAnimeData(homeData.data?.mostPopularAnimes || []);
-  const recentAnime = convertAnimeData(homeData.data?.latestEpisodeAnimes || []);
-  const topRatedAnime = convertAnimeData(homeData.data?.mostFavoriteAnimes || []);
+  // Extract data with proper fallbacks
+  const trendingData = homeData.data?.trendingAnimes || [];
+  const popularData = homeData.data?.mostPopularAnimes || [];
+  const recentData = homeData.data?.latestEpisodeAnimes || [];
+  const topData = homeData.data?.top10Animes?.today || [];
+  const spotlightData = homeData.data?.spotlightAnimes || [];
 
-  // Use the first trending anime for spotlight
-  const spotlightAnime = trendingAnime[0];
+  const trendingAnime = convertAnimeData(trendingData);
+  const popularAnime = convertAnimeData(popularData);
+  const recentAnime = convertAnimeData(recentData);
+  const topRatedAnime = convertAnimeData(topData);
+
+  // Use the first spotlight anime, fallback to trending
+  const spotlightAnime = spotlightData.length > 0 ? convertAnimeData(spotlightData)[0] : trendingAnime[0];
 
   return (
     <TVNavigationProvider initialFocus="header-search">
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-black text-white tv-page-container">
         {/* Header Navigation */}
-        <div className="p-6 pb-4">
+        <div className="px-8 py-6 pb-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-white">🎬 Tatakai TV</h1>
+            <h1 className="text-4xl font-bold text-white flex items-center gap-3">
+              <span className="text-5xl">🎬</span>
+              Tatakai TV
+            </h1>
             <div className="flex gap-4">
               <Focusable
                 id="header-search"
                 groupId="header-nav"
                 onSelect={handleNavigateToSearch}
-                className="tv-button secondary"
+                className="tv-button primary"
               >
-                <button className="bg-blue-600/80 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2">
-                  <span className="text-xl">🔍</span>
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-bold transition-colors flex items-center gap-3 text-xl">
+                  <span className="text-2xl">🔍</span>
                   Search Anime
                 </button>
               </Focusable>

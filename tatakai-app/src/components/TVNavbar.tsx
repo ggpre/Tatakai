@@ -41,27 +41,28 @@ const TVNavbar: React.FC = () => {
 
   // Register navigation elements
   useEffect(() => {
-    if (logoRef.current) {
-      registerElement('nav-logo', logoRef.current);
-    }
-
-    navigationItems.forEach(item => {
-      const element = itemRefs.current[item.id];
-      if (element) {
-        registerElement(item.id, element);
+    // Use a slight delay to ensure refs are set
+    const timer = setTimeout(() => {
+      if (logoRef.current) {
+        registerElement('nav-logo', logoRef.current);
       }
-    });
 
-    // Don't auto-focus home button to prevent navigation conflicts
-    // Let each page manage its own initial focus
+      navigationItems.forEach(item => {
+        const element = itemRefs.current[item.id];
+        if (element) {
+          registerElement(item.id, element);
+        }
+      });
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       unregisterElement('nav-logo');
       navigationItems.forEach(item => {
         unregisterElement(item.id);
       });
     };
-  }, [registerElement, unregisterElement]);
+  }, [registerElement, unregisterElement, isExpanded]); // Add isExpanded to re-register when navbar changes
 
   const handleNavigation = (href: string) => {
     router.push(href);
@@ -97,7 +98,7 @@ const TVNavbar: React.FC = () => {
           className="tv-navbar__toggle"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <ChevronRight className={`tv-navbar__toggle-icon ${isExpanded ? 'rotated' : ''}`} />
+          <span>▶️</span>
         </button>
       </div>
 

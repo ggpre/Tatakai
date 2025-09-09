@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
+import { usePathname } from 'next/navigation';
 
 interface NavigationContextType {
   focusedElement: string | null;
@@ -9,6 +16,7 @@ interface NavigationContextType {
   registerElement: (id: string, element: HTMLElement) => void;
   unregisterElement: (id: string) => void;
   navigate: (direction: 'up' | 'down' | 'left' | 'right') => void;
+  isNavigationDisabled: boolean;
 }
 
 const NavigationContext = createContext<NavigationContextType | null>(null);
@@ -21,208 +29,216 @@ export const useNavigation = () => {
   return context;
 };
 
-export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [focusedElement, setFocusedElement] = useState<string | null>(null);
+export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const pathname = usePathname();
+  const [focusedElement, setFocusedElementState] = useState<string | null>(null);
   const [navigationItems] = useState(new Map<string, HTMLElement>());
 
-  const updateFocusedElement = useCallback((id: string | null) => {
-    setFocusedElement(prevFocusedElement => {
-      // Remove focus from current element
-      if (prevFocusedElement) {
-        const currentElement = navigationItems.get(prevFocusedElement);
-        if (currentElement) {
-          currentElement.classList.remove('keyboard-focused');
-          currentElement.blur();
-        }
-      }
+  // Disable navigation on watch pages or other full-screen experiences
+  const isNavigationDisabled = pathname?.includes('/watch/') || false;
 
-      // Add focus to new element
-      if (id) {
-        const newElement = navigationItems.get(id);
-        if (newElement) {
-          newElement.classList.add('keyboard-focused');
-          newElement.focus();
-        }
-      }
+  // ✅ Centralized focus manager
+  const updateFocusedElement = useCallback(
+    (newFocusedElement: string | null) => {
+      // remove focus from all
+      document
+        .querySelectorAll('.tv-focused')
+        .forEach((el) => el.classList.remove('tv-focused', 'keyboard-focused'));
 
-      return id;
-    });
-  }, [navigationItems]);
-
-  const registerElement = useCallback((id: string, element: HTMLElement) => {
-    navigationItems.set(id, element);
-    
-    // Auto-focus first element if nothing is focused
-    if (!focusedElement) {
-      setFocusedElement(id);
-    }
-  }, [focusedElement, navigationItems, setFocusedElement]);
-
-  const unregisterElement = useCallback((id: string) => {
-    const element = navigationItems.get(id);
-    if (element) {
-      element.classList.remove('keyboard-focused');
-    }
-    navigationItems.delete(id);
-  }, [navigationItems]);
-
-  const findNearestElement = useCallback((currentElement: HTMLElement, direction: 'up' | 'down' | 'left' | 'right') => {
-    const currentRect = currentElement.getBoundingClientRect();
-    const elements = Array.from(navigationItems.entries());
-    
-    let bestElement: [string, HTMLElement] | null = null;
-    let bestDistance = Infinity;
-
-    for (const [id, element] of elements) {
-      if (element === currentElement) continue;
-      
-      const rect = element.getBoundingClientRect();
-      let isValidDirection = false;
-      let distance = 0;
-
-      switch (direction) {
-        case 'right':
-          if (rect.left > currentRect.right) {
-            distance = Math.sqrt(
-              Math.pow(rect.left - currentRect.right, 2) +
-              Math.pow(rect.top - currentRect.top, 2)
-            );
-            isValidDirection = true;
-          }
-          break;
-        case 'left':
-          if (rect.right < currentRect.left) {
-            distance = Math.sqrt(
-              Math.pow(currentRect.left - rect.right, 2) +
-              Math.pow(rect.top - currentRect.top, 2)
-            );
-            isValidDirection = true;
-          }
-          break;
-        case 'down':
-          if (rect.top > currentRect.bottom) {
-            distance = Math.sqrt(
-              Math.pow(rect.left - currentRect.left, 2) +
-              Math.pow(rect.top - currentRect.bottom, 2)
-            );
-            isValidDirection = true;
-          }
-          break;
-        case 'up':
-          if (rect.bottom < currentRect.top) {
-            distance = Math.sqrt(
-              Math.pow(rect.left - currentRect.left, 2) +
-              Math.pow(currentRect.top - rect.bottom, 2)
-            );
-            isValidDirection = true;
-          }
-          break;
-      }
-
-      if (isValidDirection && distance < bestDistance) {
-        bestDistance = distance;
-        bestElement = [id, element];
-      }
-    }
-
-    return bestElement;
-  }, [navigationItems]);
-
-  const navigate = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
-    setFocusedElement(currentFocusedElement => {
-      if (!currentFocusedElement || navigationItems.size === 0) return currentFocusedElement;
-
-      const currentElement = navigationItems.get(currentFocusedElement);
-      if (!currentElement) return currentFocusedElement;
-
-      // Special handling for hero section navigation
-      const currentRect = currentElement.getBoundingClientRect();
-      if (direction === 'up' && currentRect.top > window.innerHeight * 0.7) {
-        // If we're in the content area and going up, try to focus hero section
-        const heroElements = Array.from(navigationItems.entries()).filter(([id]) => 
-          id.includes('hero') || id.includes('spotlight')
-        );
-        
-        if (heroElements.length > 0) {
-          const heroElement = heroElements[0];
-          // Remove focus from current
-          currentElement.classList.remove('keyboard-focused');
-          currentElement.blur();
-          // Add focus to hero
-          heroElement[1].classList.add('keyboard-focused');
-          heroElement[1].focus();
-          heroElement[1].classList.add('tv-focused');
-          heroElement[1].scrollIntoView({
+      if (newFocusedElement && navigationItems.has(newFocusedElement)) {
+        const next = navigationItems.get(newFocusedElement);
+        if (next) {
+          next.classList.add('tv-focused', 'keyboard-focused');
+          next.focus();
+          next.scrollIntoView({
             behavior: 'smooth',
             block: 'center',
-            inline: 'center'
+            inline: 'center',
           });
-          return heroElement[0];
         }
       }
 
-      // Use the existing findNearestElement function
-      const nearestElement = findNearestElement(currentElement, direction);
-      if (nearestElement) {
-        // Remove focus from current
-        currentElement.classList.remove('keyboard-focused');
-        currentElement.blur();
-        // Add focus to new
-        nearestElement[1].classList.add('keyboard-focused');
-        nearestElement[1].focus();
-        
-        // Add TV focus class for visual feedback
-        document.querySelectorAll('.tv-focused').forEach(el => el.classList.remove('tv-focused'));
-        nearestElement[1].classList.add('tv-focused');
-        
-        // Scroll element into view for TV
-        nearestElement[1].scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'center'
-        });
-        
-        return nearestElement[0];
-      }
-      
-      return currentFocusedElement;
-    });
-  }, [navigationItems, findNearestElement]);
+      setFocusedElementState(newFocusedElement);
+    },
+    [navigationItems]
+  );
 
-  // Global keyboard handler
+  // ✅ Register element with better initial focus handling
+  const registerElement = useCallback(
+    (id: string, element: HTMLElement) => {
+      if (isNavigationDisabled) return; // Don't register elements when navigation is disabled
+      
+      navigationItems.set(id, element);
+      console.log(`🎯 Registered element: ${id}`, element);
+
+      // Auto-focus the first registered element if nothing is currently focused
+      if (!focusedElement) {
+        console.log(`🎯 Auto-focusing element: ${id}`);
+        updateFocusedElement(id);
+      }
+    },
+    [focusedElement, navigationItems, updateFocusedElement, isNavigationDisabled]
+  );
+
+  const unregisterElement = useCallback(
+    (id: string) => {
+      if (navigationItems.has(id)) {
+        navigationItems.delete(id);
+      }
+      if (focusedElement === id) {
+        updateFocusedElement(null);
+      }
+    },
+    [focusedElement, navigationItems, updateFocusedElement]
+  );
+
+  // ✅ Directional nearest search
+  const findNearestElement = useCallback(
+    (
+      currentElement: HTMLElement,
+      direction: 'up' | 'down' | 'left' | 'right'
+    ) => {
+      const currentRect = currentElement.getBoundingClientRect();
+      let best: [string, HTMLElement] | null = null;
+      let bestDistance = Infinity;
+
+      for (const [id, el] of navigationItems.entries()) {
+        if (el === currentElement) continue;
+
+        const rect = el.getBoundingClientRect();
+        let valid = false;
+        let dist = 0;
+
+        switch (direction) {
+          case 'right':
+            if (rect.left >= currentRect.right) {
+              dist =
+                (rect.left - currentRect.right) ** 2 +
+                (rect.top - currentRect.top) ** 2;
+              valid = true;
+            }
+            break;
+          case 'left':
+            if (rect.right <= currentRect.left) {
+              dist =
+                (currentRect.left - rect.right) ** 2 +
+                (rect.top - currentRect.top) ** 2;
+              valid = true;
+            }
+            break;
+          case 'down':
+            if (rect.top >= currentRect.bottom) {
+              dist =
+                (rect.top - currentRect.bottom) ** 2 +
+                (rect.left - currentRect.left) ** 2;
+              valid = true;
+            }
+            break;
+          case 'up':
+            if (rect.bottom <= currentRect.top) {
+              dist =
+                (currentRect.top - rect.bottom) ** 2 +
+                (rect.left - currentRect.left) ** 2;
+              valid = true;
+            }
+            break;
+        }
+
+        if (valid && dist < bestDistance) {
+          bestDistance = dist;
+          best = [id, el];
+        }
+      }
+
+      return best;
+    },
+    [navigationItems]
+  );
+
+  const navigate = useCallback(
+    (direction: 'up' | 'down' | 'left' | 'right') => {
+      setFocusedElementState((curr) => {
+        if (!curr) return null;
+        const currentEl = navigationItems.get(curr);
+        if (!currentEl) return curr;
+
+        const nearest = findNearestElement(currentEl, direction);
+        if (nearest) {
+          updateFocusedElement(nearest[0]);
+          return nearest[0];
+        }
+        return curr;
+      });
+    },
+    [findNearestElement, navigationItems, updateFocusedElement]
+  );
+
+  // Clear focus when navigation is disabled
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
-        case 'ArrowUp':
-          event.preventDefault();
-          navigate('up');
-          break;
-        case 'ArrowDown':
-          event.preventDefault();
-          navigate('down');
-          break;
+    if (isNavigationDisabled) {
+      updateFocusedElement(null);
+    }
+  }, [isNavigationDisabled, updateFocusedElement]);
+
+  // ✅ LG TV Remote handler
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      // Skip if navigation is disabled (e.g., on watch pages)
+      if (isNavigationDisabled) return;
+      
+      // Skip if focus is in an input or textarea
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+
+      switch (e.key) {
         case 'ArrowLeft':
-          event.preventDefault();
+          e.preventDefault();
           navigate('left');
           break;
+        case 'ArrowUp':
+          e.preventDefault();
+          navigate('up');
+          break;
         case 'ArrowRight':
-          event.preventDefault();
+          e.preventDefault();
           navigate('right');
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          navigate('down');
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (focusedElement) {
+            const el = navigationItems.get(focusedElement);
+            el?.click();
+          }
+          break;
+        case 'Backspace':
+        case 'Escape':
+          e.preventDefault();
+          console.log('🔙 Back pressed');
+          // Let individual pages handle back navigation
           break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [navigate, focusedElement, navigationItems, isNavigationDisabled]);
 
-  const value = {
+  const value: NavigationContextType = {
     focusedElement,
     setFocusedElement: updateFocusedElement,
     navigationItems,
     registerElement,
     unregisterElement,
-    navigate
+    navigate,
+    isNavigationDisabled,
   };
 
   return (

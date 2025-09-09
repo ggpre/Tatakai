@@ -1,5 +1,61 @@
 /* TV Interface Styles */
 
+/* TV Fullscreen mode for watch pages */
+.tv-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  background: #000;
+}
+
+/* Enhanced focus styles for TV navigation */
+.tv-focused {
+  outline: 4px solid #e11d48 !important;
+  outline-offset: 4px;
+  border-radius: 12px;
+  background-color: rgba(225, 29, 72, 0.1) !important;
+  transform: scale(1.08);
+  transition: all 0.2s ease-in-out;
+  z-index: 10;
+  position: relative;
+  box-shadow: 0 0 0 2px #e11d48, 0 8px 32px rgba(225, 29, 72, 0.4);
+}
+
+.keyboard-focused {
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.5), 0 0 20px rgba(225, 29, 72, 0.3) !important;
+}
+
+/* Episode Card Enhanced Focus */
+.tv-episode-card.tv-focused {
+  transform: scale(1.05);
+  outline: 3px solid #e11d48;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px #e11d48, 0 12px 40px rgba(225, 29, 72, 0.3);
+  background-color: rgba(225, 29, 72, 0.05);
+}
+
+/* Navigation Button Enhanced Focus */
+.tv-nav-button.tv-focused {
+  transform: scale(1.1);
+  background-color: #e11d48 !important;
+  color: white !important;
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* Action Button Enhanced Focus */
+.tv-action-button.tv-focused {
+  transform: scale(1.1);
+  outline: 3px solid #e11d48;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px #e11d48, 0 8px 24px rgba(225, 29, 72, 0.4);
+}
+
 /* TV Global Styles */
 .tv-device {
   overflow: hidden;
@@ -7,6 +63,18 @@
   width: 100vw;
   background: #000;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* TV Fullscreen Mode for Watch Pages */
+.tv-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 1000;
+  overflow: hidden;
 }
 
 /* TV Loading States */
@@ -1080,6 +1148,42 @@
   outline-offset: 2px;
 }
 
+.tv-error-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.tv-error-buttons button {
+  background: #e50914;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.tv-error-buttons button:hover,
+.tv-error-buttons button:focus {
+  background: #b8070f;
+  transform: scale(1.05);
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.tv-error-buttons button.secondary {
+  background: #333;
+}
+
+.tv-error-buttons button.secondary:hover,
+.tv-error-buttons button.secondary:focus {
+  background: #555;
+}
+
 /* TV Safe Area for older TVs */
 .tv-safe-area {
   padding: 2vh 2vw;
@@ -2126,4 +2230,190 @@ button.keyboard-focused {
   background: rgba(0, 0, 0, 0.8);
   padding: 8px 16px;
   border-radius: 20px;
+}
+
+/* TV Episode Overlay for Desktop Player */
+.tv-episode-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+  padding: 2rem;
+  pointer-events: none;
+}
+
+.tv-episode-title-overlay {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.tv-episode-controls {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  gap: 1rem;
+  pointer-events: auto;
+}
+
+.tv-episode-controls .tv-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 2px solid transparent;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.tv-episode-controls .tv-button:hover,
+.tv-episode-controls .tv-button:focus {
+  border-color: #e50914;
+  background: rgba(229, 9, 20, 0.2);
+  transform: scale(1.05);
+  outline: none;
+}
+
+.tv-episode-controls .tv-button--primary {
+  background: rgba(229, 9, 20, 0.9);
+  border-color: #e50914;
+}
+
+.tv-episode-controls .tv-button--primary:hover,
+.tv-episode-controls .tv-button--primary:focus {
+  background: #e50914;
+  transform: scale(1.05);
+}
+
+.tv-episode-controls .tv-button--secondary {
+  background: rgba(55, 65, 81, 0.9);
+  border-color: #374151;
+}
+
+.tv-episode-controls .tv-button--secondary:hover,
+.tv-episode-controls .tv-button--secondary:focus {
+  background: #374151;
+  border-color: #6b7280;
+}
+
+/* Make sure the main content container is properly positioned */
+.tv-main-content {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Ensure the aspect-video container fills the TV properly */
+.tv-main-content .aspect-video {
+  width: 100vw !important;
+  height: 100vh !important;
+  aspect-ratio: unset !important;
+}
+
+/* TV Video Player Mode for Desktop Player */
+.tv-video-player-mode {
+  width: 100vw !important;
+  height: 100vh !important;
+  cursor: default !important;
+}
+
+.tv-video-player-mode:focus {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+.tv-video-player-mode video {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+/* Hide mouse-specific elements in TV mode */
+.tv-video-player-mode .group:hover .opacity-0 {
+  opacity: 1 !important;
+}
+
+.tv-video-player-mode .group .opacity-100 {
+  opacity: 1 !important;
+}
+
+/* TV Instructions Overlay */
+.tv-instructions-overlay {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 50;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.tv-instructions-overlay:hover {
+  opacity: 1;
+}
+
+/* TV Video Player Mode Styling */
+.tv-video-player-mode {
+  outline: none;
+  height: 100vh !important;
+  width: 100vw !important;
+}
+
+.tv-video-player-mode:focus {
+  outline: 3px solid #e50914;
+  outline-offset: -3px;
+}
+
+/* TV-specific control styling for desktop player */
+.tv-video-player-mode .group\/progress:hover {
+  height: 4px !important;
+}
+
+.tv-video-player-mode button {
+  transition: all 0.2s ease;
+}
+
+.tv-video-player-mode button:focus {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+  transform: scale(1.1);
+}
+
+/* TV instructions overlay */
+.tv-instructions-overlay {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.tv-video-player-mode:focus .tv-instructions-overlay {
+  opacity: 1;
 }

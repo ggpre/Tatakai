@@ -60,6 +60,7 @@ const TVAnimeCard: React.FC<TVAnimeCardProps> = ({ anime, onClick, index, carous
       tabIndex={0}
       role="button"
       aria-label={`Watch ${anime.title}`}
+      data-carousel-card={cardId}
     >
       {/* Card Image */}
       <div className="tv-card__image">

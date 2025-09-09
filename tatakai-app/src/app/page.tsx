@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import HeroSection from '@/components/HeroSection';
 import AnimeCarousel from '@/components/AnimeCarousel';
 import Top10Section from '@/components/Top10Section';
-import TVHomePage from '@/components/TVHomePage';
+import TVHomePage from '@/components/TVHomePageReactTV';
 import { useScreenDetection } from '@/hooks/useScreenDetection';
 import { AnimeAPI, type HomePageData } from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -78,8 +78,12 @@ const HomePage = () => {
     return <HeroSkeleton />;
   }
 
+  // Debug: Log device detection
+  console.log('Device Detection:', { deviceType, width: window.innerWidth, height: window.innerHeight });
+
   // Render TV interface for TV devices
   if (deviceType === 'tv') {
+    console.log('Rendering TV interface');
     return <TVHomePage />;
   }
 

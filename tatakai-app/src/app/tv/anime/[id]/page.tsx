@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import TVAnimeDetailsPage from '@/components/TVAnimeDetailsPage';
+import TVAnimeDetailsPageNew from '@/components/TVAnimeDetailsPageNew';
 
 const TVAnimeDetailsRoute = () => {
-  return <TVAnimeDetailsPage />;
+  return <TVAnimeDetailsPageNew />;
 };
 
 export default TVAnimeDetailsRoute;

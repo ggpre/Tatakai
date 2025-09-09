@@ -1,10 +1,5 @@
-'use client';
+import TVHomePageReactTV from '@/components/TVHomePageReactTV';
 
-import React from 'react';
-import TVHomePage from '@/components/TVHomePage';
-
-const TVHomeRoute = () => {
-  return <TVHomePage />;
-};
-
-export default TVHomeRoute;
+export default function TVPage() {
+  return <TVHomePageReactTV />;
+}

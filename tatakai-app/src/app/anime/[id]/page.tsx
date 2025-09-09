@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimeAPI, type AnimeInfoResponse, type AnimeEpisodesResponse } from '@/lib/api';
+import { useScreenDetection } from '@/hooks/useScreenDetection';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,13 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Play, Star, Clock, BookOpen, Heart, Share2 } from 'lucide-react';
 import AnimeCarousel from '@/components/AnimeCarousel';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useScreenDetection } from '@/hooks/useScreenDetection';
-import TVAnimeDetailsPage from '@/components/TVAnimeDetailsPage';
+import TVAnimeDetailsPageNew from '@/components/TVAnimeDetailsPageNew';
 
 const AnimeDetailsPage = () => {
   const params = useParams();
   const animeId = params?.id as string;
-  const { effectiveDeviceType } = useScreenDetection();
+  const { deviceType } = useScreenDetection();
   const [animeData, setAnimeData] = useState<AnimeInfoResponse | null>(null);
   const [episodes, setEpisodes] = useState<AnimeEpisodesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,8 +60,8 @@ const AnimeDetailsPage = () => {
   }, [animeId]);
 
   // Move the TV device check after all hooks
-  if (effectiveDeviceType === 'tv') {
-    return <TVAnimeDetailsPage />;
+  if (typeof window !== 'undefined' && window.navigator.userAgent.includes('TV')) {
+    return <TVAnimeDetailsPageNew />;
   }
 
   if (loading) {
@@ -82,6 +82,11 @@ const AnimeDetailsPage = () => {
 
   const { anime, mostPopularAnimes, recommendedAnimes, relatedAnimes, seasons } = animeData.data;
   const { info, moreInfo } = anime;
+
+  // Render TV interface for TV devices
+  if (deviceType === 'tv') {
+    return <TVAnimeDetailsPageNew />;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

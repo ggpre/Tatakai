@@ -5,6 +5,9 @@ import { ClientLayout } from "@/components/ClientLayout";
 import TVLayout from "@/components/TVLayout";
 import DeviceSelector from "@/components/DeviceSelector";
 
+// Import TV mode utilities for browser console access
+import "@/utils/tvMode";
+
 export const metadata: Metadata = {
   title: "Tatakai - Modern Anime Streaming",
   description: "Watch the latest anime episodes and discover new series with high-quality streaming. Your ultimate anime destination.",
