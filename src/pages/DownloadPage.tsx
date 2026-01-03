@@ -10,6 +10,7 @@ export default function DownloadPage() {
   const [selectedOS, setSelectedOS] = useState<'mac' | 'win'>('mac');
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadInterval, setDownloadInterval] = useState<NodeJS.Timeout | null>(null);
 
   const handleDownload = () => {
     setIsDownloading(true);
@@ -30,17 +31,19 @@ export default function DownloadPage() {
       });
     }, 50);
 
-    // Cleanup on unmount
-    return () => clearInterval(interval);
+    setDownloadInterval(interval);
   };
 
   // Cleanup interval on component unmount
   useEffect(() => {
     return () => {
+      if (downloadInterval) {
+        clearInterval(downloadInterval);
+      }
       setIsDownloading(false);
       setDownloadProgress(0);
     };
-  }, []);
+  }, [downloadInterval]);
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
@@ -225,12 +228,9 @@ export default function DownloadPage() {
                     </div>
                     <div className="flex justify-between items-center text-[10px] uppercase tracking-wider text-gray-600 px-1 font-mono">
                       <span>v2.0.0 (x64)</span>
-                      <button 
-                        onClick={() => console.log('Show changelog')} 
-                        className="hover:text-white transition-colors underline decoration-gray-800 underline-offset-4 cursor-pointer bg-transparent border-0 p-0"
-                      >
+                      <span className="text-gray-700 cursor-not-allowed">
                         Changelog
-                      </button>
+                      </span>
                     </div>
                   </div>
 
