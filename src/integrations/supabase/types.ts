@@ -649,6 +649,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_tier_list_views: {
+        Args: {
+          tier_list_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

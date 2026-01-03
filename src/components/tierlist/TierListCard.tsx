@@ -104,7 +104,7 @@ export function TierListCard({ tierList, showAuthor = true, onShare }: TierListC
         <div className="flex items-center justify-between mt-4">
           {showAuthor && tierList.profiles && (
             <Link 
-              to={`/user/${tierList.profiles.username}`}
+              to={`/@${tierList.profiles.username}`}
               className="flex items-center gap-2 hover:text-primary transition-colors"
             >
               <Avatar className="w-6 h-6">

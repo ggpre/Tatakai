@@ -162,11 +162,8 @@ export function useTierListByShareCode(shareCode: string) {
         .eq('user_id', data.user_id)
         .single();
 
-      // Increment view count
-      await supabase
-        .from('tier_lists')
-        .update({ views_count: (data.views_count || 0) + 1 })
-        .eq('id', data.id);
+      // Increment view count using RPC function
+      await supabase.rpc('increment_tier_list_views', { tier_list_id: data.id });
 
       // Check if user has liked
       if (user) {

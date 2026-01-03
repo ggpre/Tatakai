@@ -28,6 +28,7 @@ import BannedPage from "./pages/BannedPage";
 import ErrorPage from "./pages/ErrorPage";
 import TierListPage, { TierListViewPage } from "./pages/TierListPage";
 import PlaylistsPage, { PlaylistViewPage } from "./pages/PlaylistPage";
+import CommunityPage from "./pages/CommunityPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -154,6 +155,7 @@ function AppContent() {
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/status" element={<ProtectedRoute><StatusPage /></ProtectedRoute>} />
+          <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
           <Route path="/tierlists" element={<ProtectedRoute><TierListPage /></ProtectedRoute>} />
           <Route path="/tierlist/:shareCode" element={<ProtectedRoute><TierListViewPage /></ProtectedRoute>} />
           <Route path="/playlists" element={<ProtectedRoute><PlaylistsPage /></ProtectedRoute>} />

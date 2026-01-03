@@ -1,4 +1,4 @@
-import { Play, LayoutGrid, Search, TrendingUp, Heart, User, Settings, LogIn, Trophy } from "lucide-react";
+import { Play, LayoutGrid, Search, TrendingUp, Heart, User, Settings, LogIn, Users } from "lucide-react";
 import { NavIcon } from "@/components/ui/NavIcon";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,10 +45,10 @@ export function Sidebar() {
         label="Favorites"
       />
       <NavIcon 
-        icon={Trophy} 
-        active={isActive("/tierlists")} 
-        onClick={() => navigate("/tierlists")}
-        label="Tier Lists"
+        icon={Users} 
+        active={isActive("/community")} 
+        onClick={() => navigate("/community")}
+        label="Community"
       />
       {user && !isBanned ? (
         <NavIcon 

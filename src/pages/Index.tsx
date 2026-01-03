@@ -11,6 +11,7 @@ import { GenreCloud } from "@/components/anime/GenreCloud";
 import { AnimeGrid } from "@/components/anime/AnimeGrid";
 import { ContinueWatching } from "@/components/anime/ContinueWatching";
 import { LocalContinueWatching } from "@/components/anime/LocalContinueWatching";
+import { PlaylistSection } from "@/components/anime/PlaylistSection";
 import { HeroSkeleton, CardSkeleton } from "@/components/ui/skeleton-custom";
 import { Heart, Sparkles } from "lucide-react";
 
@@ -60,6 +61,9 @@ const Index = () => {
             
             {/* Continue Watching - LocalStorage for guests */}
             <LocalContinueWatching />
+
+            {/* My Playlists */}
+            <PlaylistSection />
 
             {/* Latest Episodes */}
             <LatestEpisodes animes={data.latestEpisodeAnimes} />

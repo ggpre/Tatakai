@@ -1,4 +1,4 @@
-import { LayoutGrid, Search, Heart, Settings, User, LogIn, Trophy } from "lucide-react";
+import { LayoutGrid, Search, Settings, User, LogIn, Users } from "lucide-react";
 import { NavIcon } from "@/components/ui/NavIcon";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,9 +23,9 @@ export function MobileNav() {
         onClick={() => navigate("/search")}
       />
       <NavIcon 
-        icon={Trophy} 
-        active={isActive("/tierlists")} 
-        onClick={() => navigate("/tierlists")}
+        icon={Users} 
+        active={isActive("/community")} 
+        onClick={() => navigate("/community")}
       />
       {user && !isBanned ? (
         <NavIcon 
