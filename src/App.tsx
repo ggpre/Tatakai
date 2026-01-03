@@ -21,6 +21,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/AdminPage";
 import SettingsPage from "./pages/SettingsPage";
 import StatusPage from "./pages/StatusPage";
+import DownloadPage from "./pages/DownloadPage";
 import NotFound from "./pages/NotFound";
 import MaintenancePage from "./pages/MaintenancePage";
 import ServiceUnavailablePage from "./pages/ServiceUnavailablePage";
@@ -155,6 +156,7 @@ function AppContent() {
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/status" element={<ProtectedRoute><StatusPage /></ProtectedRoute>} />
+          <Route path="/download" element={<ProtectedRoute><DownloadPage /></ProtectedRoute>} />
           <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
           <Route path="/tierlists" element={<ProtectedRoute><TierListPage /></ProtectedRoute>} />
           <Route path="/tierlist/:shareCode" element={<ProtectedRoute><TierListViewPage /></ProtectedRoute>} />
