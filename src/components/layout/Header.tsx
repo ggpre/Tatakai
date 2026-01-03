@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/ui/NotificationBell";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +20,11 @@ export function Header() {
   const { user, profile, isAdmin, isBanned, signOut, isLoading } = useAuth();
 
   useEffect(() => {
-    // Simple check to determine system status
+    // Check Supabase connectivity as a meaningful health check
     const checkStatus = async () => {
       try {
-        const response = await fetch(window.location.origin, { method: 'HEAD' });
-        setSystemStatus(response.ok ? 'operational' : 'degraded');
+        const { error } = await supabase.from('profiles').select('count').limit(1);
+        setSystemStatus(error ? 'degraded' : 'operational');
       } catch {
         setSystemStatus('degraded');
       }

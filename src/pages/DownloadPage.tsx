@@ -2,7 +2,7 @@ import { Background } from '@/components/layout/Background';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { Download, Smartphone, Monitor, CheckCircle, ArrowRight, Apple, ChevronDown } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 export default function DownloadPage() {
@@ -29,17 +29,6 @@ export default function DownloadPage() {
       });
     }, 50);
   };
-
-  useEffect(() => {
-    // Initialize Lucide icons
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/lucide@latest';
-    document.head.appendChild(script);
-    
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
@@ -95,7 +84,7 @@ export default function DownloadPage() {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 flex items-center justify-center">
               <img 
-                src="/file_00000000c1e471fa8cb20102e33bdbed-removebg-preview.png" 
+                src="/tatakai-logo-square.png" 
                 alt="Tatakai Logo" 
                 className="w-full h-full object-contain"
               />
@@ -193,7 +182,7 @@ export default function DownloadPage() {
                           }}
                         />
                         <img 
-                          src="/file_00000000c1e471fa8cb20102e33bdbed-removebg-preview.png" 
+                          src="/tatakai-logo-square.png" 
                           alt="Tatakai Logo" 
                           className="w-16 h-16 object-contain relative z-10"
                         />
@@ -385,7 +374,7 @@ export default function DownloadPage() {
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-6 h-6 flex items-center justify-center">
                   <img 
-                    src="/file_00000000c1e471fa8cb20102e33bdbed-removebg-preview.png" 
+                    src="/tatakai-logo-square.png" 
                     alt="Tatakai Logo" 
                     className="w-full h-full object-contain"
                   />

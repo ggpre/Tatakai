@@ -18,7 +18,7 @@ export function Sidebar() {
         style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.3)" }}
       >
         <img 
-          src="/file_00000000c1e471fa8cb20102e33bdbed-removebg-preview.png" 
+          src="/tatakai-logo-square.png" 
           alt="Tatakai Logo" 
           className="w-full h-full object-contain"
         />
