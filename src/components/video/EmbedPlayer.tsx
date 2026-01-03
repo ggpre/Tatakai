@@ -25,42 +25,10 @@ export function EmbedPlayer({ url, poster, language, onError }: EmbedPlayerProps
   const handleRetry = () => {
     setIsLoading(true);
     setError(false);
-    // Force iframe reload by clearing and resetting src
+    // Force iframe reload
     const iframe = document.querySelector('iframe[data-embed-player]') as HTMLIFrameElement;
     if (iframe) {
-      const currentSrc = iframe.src;
-      iframe.src = 'about:blank';
-      setTimeout(() => {
-        iframe.src = currentSrc;
-      }, 0);
-    }
-  };
-
-  // Prevent iframe from navigating parent window or opening popups
-  const handleIframeLoad = (e: React.SyntheticEvent<HTMLIFrameElement>) => {
-    handleLoad();
-    
-    try {
-      const iframe = e.currentTarget;
-      
-      // Prevent navigation redirects by monitoring iframe location changes
-      const checkNavigation = setInterval(() => {
-        try {
-          // This will throw if cross-origin, which is expected and fine
-          if (iframe.contentWindow) {
-            // Block any attempts to navigate the parent window
-            iframe.contentWindow.parent = iframe.contentWindow;
-            iframe.contentWindow.top = iframe.contentWindow;
-          }
-        } catch {
-          // Cross-origin access blocked - this is expected and safe
-        }
-      }, 100);
-
-      // Clean up interval after 5 seconds (most ad redirects happen quickly)
-      setTimeout(() => clearInterval(checkNavigation), 5000);
-    } catch {
-      // Ignore cross-origin errors
+      iframe.src = iframe.src;
     }
   };
 
@@ -103,10 +71,10 @@ export function EmbedPlayer({ url, poster, language, onError }: EmbedPlayerProps
         className="w-full h-full border-0"
         allowFullScreen
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        onLoad={handleIframeLoad}
+        onLoad={handleLoad}
         onError={handleError}
-        referrerPolicy="no-referrer"
-        title="Anime Video Player"
+        referrerPolicy="origin"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
       />
     </div>
   );
