@@ -132,12 +132,20 @@ tatakai-android/
 
 ## 🔐 Environment Variables
 
-Create a `.env` file (optional - defaults are built-in):
+Create a `.env` file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Then fill in your values:
 
 ```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_key
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+**Important:** Never commit `.env` files with real credentials to version control.
 
 ## 📲 Key Screens
 

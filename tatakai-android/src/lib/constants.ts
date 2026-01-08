@@ -3,9 +3,11 @@ export const API_BASE_URL = 'https://consumet-api-two-alpha.vercel.app';
 export const ANISKIP_API_URL = 'https://api.aniskip.com';
 export const JIKAN_API_URL = 'https://api.jikan.moe/v4';
 
-// Supabase Configuration (Note: In production, use environment variables)
-export const SUPABASE_URL = 'https://xkbzamfyupjafugqeaby.supabase.co';
-export const SUPABASE_ANON_KEY = 'sb_publishable_hiKONZyoLpTAkFpQL5DWIQ_1_OWjmj3';
+// Supabase Configuration
+// In production, these should be set via environment variables or Expo constants
+// For development, create a .env file with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
+export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // App Configuration
 export const APP_NAME = 'Tatakai';

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import uuid from 'react-native-uuid';
 import { WatchHistoryItem, WatchlistItem } from '../types';
 
 interface WatchState {
@@ -38,7 +39,8 @@ interface WatchState {
   setSkipOutro: (value: boolean) => void;
 }
 
-const generateId = () => Math.random().toString(36).substring(2, 15);
+// Use UUID for robust unique ID generation
+const generateId = (): string => uuid.v4() as string;
 
 export const useWatchStore = create<WatchState>()(
   persist(
